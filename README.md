@@ -1,5 +1,7 @@
 # Valve Puzzle
 
+https://github.com/user-attachments/assets/ValvePuzzle.mp4
+
 A simple Unity puzzle where the player must find a valve handle and use it to fix a broken steam pipe.
 
 ## Overview
