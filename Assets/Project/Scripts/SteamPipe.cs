@@ -1,47 +1,82 @@
 using UnityEngine;
 
+/// <summary>
+/// Steam pipe that blocks the player's path.
+/// Requires a ValveHandle to fix and disable the steam.
+/// </summary>
 public class SteamPipe : MonoBehaviour, IIntractable
 {
-    [Header("Steam Corridor")]
-    public GameObject steamParent; 
+    [Header("References")]
+    [SerializeField] private ParticleSystem steamEffect;  // The steam particles
+    [SerializeField] private Collider blockingCollider;   // The collider that blocks the player
 
-    [Header("Leak Steam")]
-    public ParticleSystem leakSteam;
-
+    // Tracks if the pipe has been fixed
     private bool isFixed = false;
 
-    public Interactor.ObjectType GetObjectType() { return Interactor.ObjectType.SteamPipe; }
-    public Interactor.TypeOfInteractor GetTypeofInteractorObject() { return Interactor.TypeOfInteractor.ValveSocket; }
-    public bool CanInteract() { return !isFixed; }
-    public GameObject GetGameObject() { return gameObject; }
-    public void destroy() { Destroy(gameObject); }
-    public void Interact() { if(!isFixed) Debug.Log("Needs a valve!"); }
+    // Returns the identity of this object
+    public Interactor.ObjectType GetObjectType() 
+    { 
+        return Interactor.ObjectType.SteamPipe; 
+    }
 
+    // This object requires a valve to interact with
+    public Interactor.TypeOfInteractor GetTypeofInteractorObject() 
+    { 
+        return Interactor.TypeOfInteractor.ValveSocket; 
+    }
+
+    // Can only interact if not already fixed
+    public bool CanInteract() 
+    { 
+        return !isFixed; 
+    }
+
+    public GameObject GetGameObject() 
+    { 
+        return gameObject; 
+    }
+
+    public void destroy() 
+    { 
+        Destroy(gameObject); 
+    }
+
+    // Called when player interacts without holding an item
+    public void Interact() { }
+
+    /// <summary>
+    /// Called when player uses an item on this pipe.
+    /// If the item is a ValveHandle, fixes the pipe.
+    /// </summary>
     public bool Interact(Interactor.ObjectType objectType)
     {
+        // Check if the player is using the correct item
         if (objectType == Interactor.ObjectType.ValveHandle)
         {
-            Debug.Log("<color=green>SUCCESS: Turning off the whole corridor!</color>");
-
-            if (leakSteam != null) leakSteam.Stop();
-
-            if (steamParent != null)
+            // Stop the steam particles if assigned
+            if (steamEffect != null)
             {
-                Collider col = steamParent.GetComponent<Collider>();
-                if (col != null) col.enabled = false;
-
-                ParticleSystem[] allSteam = steamParent.GetComponentsInChildren<ParticleSystem>();
-                foreach (ParticleSystem ps in allSteam)
-                {
-                    ps.Stop();
-                }
+                steamEffect.Stop();
             }
 
-            if (NoiseMeter.Instance != null) NoiseMeter.Instance.addNoise(60f);
+            // Disable the blocking collider if assigned
+            if (blockingCollider != null)
+            {
+                blockingCollider.enabled = false;
+            }
 
+            // Add noise to alert enemies
+            if (NoiseMeter.Instance != null)
+            {
+                NoiseMeter.Instance.addNoise(60f);
+            }
+
+            // Mark as fixed so we can't interact again
             isFixed = true;
             return true;
         }
+
+        // Wrong item or no item
         return false;
     }
 }
